@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cotação Mestre — Base Limpa</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root{
+      --bg0:#f6f8fb;
+      --bg1:#ffffff;
+      --ink:#0b1220;
+      --muted:#64748b;
+      --border:#e6ebf2;
+
+      --p:#2563eb;
+      --p2:#1d4ed8;
+      --a:#0ea5e9;
+
+      --ok:#16a34a;
+      --warn:#f59e0b;
+      --bad:#dc2626;
+
+      --shadow: 0 14px 30px rgba(2, 6, 23, .08);
+      --shadow2: 0 10px 18px rgba(2, 6, 23, .06);
+
+      --radius: 18px;
+      --radius2: 14px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 700px at 8% 12%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(1200px 700px at 90% 15%, rgba(14,165,233,.10), transparent 55%),
+        linear-gradient(180deg, #f7f9fd, var(--bg0));
+      padding: 22px;
+    }
+
+    .wrap{
+      max-width: 1560px;
+      margin: 0 auto;
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap: 18px;
+      align-items:start;
+    }
+
+    /* Topbar */
+    .topbar{
+      grid-column: 1 / -1;
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 18px 16px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+      position: sticky;
+      top: 14px;
+      z-index: 8;
+      backdrop-filter: blur(10px);
+    }
+
+    .brand{
+      display:flex;
+      gap: 14px;
+      align-items:center;
+      min-width: 360px;
+    }
+
+    .brandMark{
+      width: 46px; height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--p), #0b3aa9);
+      display:grid;
+      place-items:center;
+      color:#fff;
+      box-shadow: 0 10px 18px rgba(37,99,235,.28);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    .brand h1{
+      font-size: 16px;
+      line-height: 1.05;
+      margin:0;
+      letter-spacing: -0.02em;
+      font-weight: 900;
+    }
+
+    .brand p{
+      margin: 4px 0 0 0;
+      font-size: 12.5px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .topActions{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+
+    .badges{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: #f1f5ff;
+      color: #19308d;
+      border: 1px solid rgba(37,99,235,.18);
+      font-weight: 900;
+      font-size: 12.5px;
+      white-space:nowrap;
+    }
+
+    .badge.muted{
+      background: #f6f7fb;
+      color: #334155;
+      border: 1px solid var(--border);
+      font-weight: 900;
+    }
+
+    .btn{
+      border: 1px solid var(--border);
+      background: #fff;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 900;
+      font-size: 13px;
+      display:inline-flex;
+      align-items:center;
+      gap: 9px;
+      cursor:pointer;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
+      box-shadow: 0 8px 16px rgba(2,6,23,.05);
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(37,99,235,.30);
+      box-shadow: 0 12px 22px rgba(2,6,23,.08);
+    }
+    .btn.primary{
+      background: linear-gradient(135deg, var(--p), var(--p2));
+      border-color: rgba(255,255,255,.18);
+      color:#fff;
+      box-shadow: 0 12px 22px rgba(37,99,235,.22);
+    }
+    .btn.primary:hover{
+      border-color: rgba(255,255,255,.28);
+      box-shadow: 0 16px 28px rgba(37,99,235,.30);
+    }
+
+    .btn.danger{
+      border-color: rgba(220,38,38,.20);
+      background: #fff5f5;
+      color:#8a1111;
+    }
+
+    /* Tabs */
+    .tabs{
+      grid-column: 1 / -1;
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      margin-top: 2px;
+    }
+    .tab{
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.72);
+      font-weight: 900;
+      font-size: 13px;
+      color: #0f172a;
+      cursor:pointer;
+      transition: all .15s ease;
+      display:inline-flex;
+      gap: 8px;
+      align-items:center;
+    }
+    .tab:hover{ border-color: rgba(37,99,235,.28); }
+    .tab.active{
+      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(14,165,233,.08));
+      border-color: rgba(37,99,235,.30);
+      color:#0b2a78;
+    }
+
+    /* Cards */
+    .card{
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .cardHead{
+      padding: 16px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff, #fbfcff);
+    }
+    .cardHead .title{
+      display:flex; align-items:center; gap: 10px;
+      font-weight: 950;
+      letter-spacing: -0.02em;
+    }
+    .cardHead .title i{ color: var(--p); }
+    .cardBody{ padding: 16px 18px; }
+
+    /* Filters */
+    .filters{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr 1fr 1.2fr;
+      gap: 12px;
+      align-items:end;
+    }
+    .field label{
+      display:block;
+      font-size: 12.5px;
+      font-weight: 950;
+      color: #0f172a;
+      margin-bottom: 7px;
+    }
+    .field .hint{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.35;
+      font-weight: 650;
+    }
+    select, input, textarea{
+      width:100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #f7f9fd;
+      outline: none;
+      font-weight: 800;
+      color: #0f172a;
+      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    textarea{ min-height: 90px; resize: vertical; }
+    select:focus, input:focus, textarea:focus{
+      border-color: rgba(37,99,235,.40);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+      background: #ffffff;
+    }
+
+    /* Table */
+    .tableWrap{
+      overflow:auto;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+    table{
+      width:100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 1200px;
+      background:#fff;
+    }
+    thead th{
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: linear-gradient(180deg, #fbfcff, #f4f7ff);
+      border-bottom: 1px solid var(--border);
+      text-align:left;
+      padding: 12px 12px;
+      font-size: 12px;
+      font-weight: 950;
+      color: #0f172a;
+      white-space: nowrap;
+    }
+    tbody td{
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(230,235,242,.85);
+      font-size: 13px;
+      font-weight: 650;
+      vertical-align: middle;
+    }
+    tbody tr:hover{ background: #f7faff; }
+
+    .muted{ color: var(--muted); font-weight: 750; }
+    .num{
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+    .price{
+      font-weight: 950;
+      color:#0b2a78;
+    }
+    .right{ text-align:right; }
+    .nowrap{ white-space:nowrap; }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 7px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 950;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      white-space: nowrap;
+    }
+    .pill.ok{ background:#ecfdf3; border-color: rgba(22,163,74,.20); color:#0b6b2b; }
+    .pill.warn{ background:#fff7ed; border-color: rgba(245,158,11,.25); color:#8a4b00; }
+    .pill.bad{ background:#fef2f2; border-color: rgba(220,38,38,.22); color:#8a1111; }
+
+    /* Right side reference */
+    .ref{ position: sticky; top: 98px; }
+    .ref .cardBody{ padding: 14px 14px 16px 14px; }
+    .refTitleRow{ display:flex; align-items:center; justify-content:space-between; gap: 10px; }
+    .refTitleRow .tag{
+      font-size: 12px;
+      font-weight: 950;
+      color: #0b2a78;
+      background: linear-gradient(135deg, rgba(37,99,235,.12), rgba(14,165,233,.10));
+      border: 1px solid rgba(37,99,235,.20);
+      padding: 6px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .refList{ margin-top: 12px; display:flex; flex-direction:column; gap: 10px; }
+    .refItem{
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 12px;
+      background: linear-gradient(180deg, #fff, #fcfdff);
+      box-shadow: 0 10px 16px rgba(2,6,23,.04);
+      transform: translateY(0);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .refItem::before{
+      content:"";
+      position:absolute;
+      inset: 0;
+      background: radial-gradient(700px 200px at 12% 20%, rgba(37,99,235,.09), transparent 60%),
+                  radial-gradient(600px 200px at 90% 30%, rgba(14,165,233,.08), transparent 60%);
+      opacity: 0;
+      transition: opacity .22s ease;
+      pointer-events:none;
+    }
+    .refItem:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 14px 22px rgba(2,6,23,.06);
+      border-color: rgba(37,99,235,.22);
+    }
+    .refItem:hover::before{ opacity: 1; }
+    .refTop{ display:flex; justify-content:space-between; align-items:flex-start; gap: 10px; position:relative; }
+    .refTop strong{ display:block; font-size: 13px; font-weight: 950; letter-spacing:-0.01em; }
+    .refTop span{ font-size: 12px; color: var(--muted); font-weight: 850; }
+    .refNums{ margin-top: 8px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; position:relative; }
+    .refNum{ background:#f8fafc; border: 1px solid var(--border); border-radius: 12px; padding: 9px 10px; }
+    .refNum b{ display:block; font-size: 12px; color: var(--muted); font-weight: 950; }
+    .refNum div{ margin-top: 4px; font-weight: 950; color:#0f172a; font-variant-numeric: tabular-nums; }
+
+    /* Lists / products */
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .list{ border: 1px solid var(--border); border-radius: 14px; overflow:hidden; }
+    .list .row{
+      display:flex; justify-content:space-between; align-items:flex-start; gap: 12px;
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(230,235,242,.85);
+      background: #fff;
+    }
+    .list .row:nth-child(even){ background:#fbfcff; }
+    .list .row:last-child{ border-bottom:none; }
+    .row .left strong{ display:block; font-weight: 950; letter-spacing: -0.01em; }
+    .row .left span{ display:block; margin-top: 4px; color: var(--muted); font-weight: 750; font-size: 12px; }
+    .row .right{ text-align:right; font-weight: 950; white-space: nowrap; }
+
+    .productsGrid{ display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; }
+    .pCard{
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow:hidden;
+      background: #fff;
+      box-shadow: 0 10px 18px rgba(2,6,23,.05);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .pCard:hover{
+      transform: translateY(-3px);
+      border-color: rgba(37,99,235,.22);
+      box-shadow: 0 16px 26px rgba(2,6,23,.08);
+    }
+    .pImg{
+      height: 118px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(900px 180px at 15% 25%, rgba(37,99,235,.10), transparent 60%),
+        linear-gradient(180deg, #f8fafc, #eef2ff);
+      color: rgba(15,23,42,.55);
+      font-size: 26px;
+      border-bottom: 1px solid var(--border);
+    }
+    .pInfo{ padding: 12px 12px 14px 12px; }
+    .pInfo strong{
+      display:block;
+      font-weight: 950;
+      letter-spacing:-0.01em;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .pInfo .meta{
+      color: var(--muted);
+      font-weight: 750;
+      font-size: 12px;
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .pInfo .best{
+      margin-top: 8px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+      font-weight: 950;
+    }
+
+    /* Modal */
+    .modalBack{
+      position: fixed; inset: 0;
+      background: rgba(2,6,23,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 99;
+    }
+    .modal{
+      width: min(820px, 100%);
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 24px 60px rgba(2,6,23,.35);
+      overflow:hidden;
+    }
+    .modalHead{
+      padding: 14px 16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #fff, #fbfcff);
+    }
+    .modalHead strong{ font-weight: 950; }
+    .modalBody{ padding: 14px 16px; }
+    .modalGrid{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modalActions{
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      display:flex;
+      justify-content:flex-end;
+      gap: 10px;
+      background: #fff;
+    }
+
+    .note{
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-weight: 650;
+    }
+
+    .toast{
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #0b1226;
+      color:#fff;
+      padding: 12px 14px;
+      border-radius: 14px;
+      box-shadow: 0 18px 40px rgba(2,6,23,.25);
+      border: 1px solid rgba(255,255,255,.14);
+      font-weight: 850;
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .18s ease, transform .18s ease;
+      max-width: 480px;
+      z-index: 120;
+      white-space: pre-line;
+    }
+    .toast.show{ opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1250px){
+      .wrap{ grid-template-columns: 1fr; }
+      .ref{ position: static; }
+      .productsGrid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .filters{ grid-template-columns: 1fr 1fr; }
+      .brand{ min-width: unset; }
+      table{ min-width: 1100px; }
+    }
+    @media (max-width: 720px){
+      .filters{ grid-template-columns: 1fr; }
+      .productsGrid{ grid-template-columns: 1fr; }
+      .topbar{ position: static; }
+      table{ min-width: 1100px; }
+      .modalGrid{ grid-template-columns: 1fr; }
+    }
+     /* --- Estilos do Simulador e Análise --- */
+    .sim-box {
+      margin-top: 14px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .sim-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #334155;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+    .sim-input input {
+      width: 100%;
+      background: #fff;
+      border: 1px solid #94a3b8;
+      color: #0f172a;
+      padding: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 6px;
+    }
+    .sim-results {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .sim-tag {
+      font-size: 11px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      padding: 4px 8px;
+      border-radius: 6px;
+      color: #64748b;
+      font-weight: 600;
+      min-width: 80px;
+    }
+    .sim-tag strong { color: #0f172a; font-size: 13px; display: block; }
+    
+    /* Layout do Card de Comparação */
+    .ana-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 14px;
+      background: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      margin-bottom: 12px;
+    }
+    .ana-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+    .ana-comp { display:grid; grid-template-columns: 1fr auto 1fr; gap:10px; align-items:center; }
+    .ana-box { padding: 10px; border-radius: 8px; border: 1px solid transparent; }
+    .ana-box.win { background:#f0fdf4; border-color:#bbf7d0; }
+    .ana-box.lose { background:#fef2f2; border-color:#fecaca; opacity: 0.8; }
+
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <div class="topbar">
+      <div class="brand">
+        <div class="brandMark"><i class="fa-solid fa-layer-group"></i></div>
+        <div>
+          <h1>Cotação Mestre — Projeto Vazio</h1>
+          <p>Base limpa para preenchimento manual ou importação controlada.</p>
+        </div>
+      </div>
+
+      <div class="topActions">
+        <div class="badges">
+          <span class="badge muted" id="badgeTotal"><i class="fa-solid fa-database"></i> 0 registros</span>
+          <span class="badge" id="badgePend"><i class="fa-solid fa-hourglass-half"></i> 0 pendentes</span>
+        </div>
+
+        <label class="btn" title="Importar Excel (.xlsx) de forma controlada">
+          <i class="fa-solid fa-file-import"></i> Importar XLSX
+          <input id="fileXlsx" type="file" accept=".xlsx" style="display:none;">
+        </label>
+
+        <button class="btn" id="btnVerProdutos" title="Ir para Produtos">
+          <i class="fa-solid fa-boxes-stacked"></i> Ver Produtos
+        </button>
+
+        <button class="btn" id="btnExportCSV" title="Exportar tabela filtrada em CSV">
+          <i class="fa-solid fa-file-csv"></i> Exportar CSV
+        </button>
+
+        <button class="btn primary" id="btnNovo" title="Cadastrar nova linha via formulário">
+          <i class="fa-solid fa-plus"></i> Nova Cotação
+        </button>
+
+        <button class="btn danger" id="btnReset" title="Limpar dados locais (LocalStorage)">
+          <i class="fa-solid fa-trash"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Abas">
+      <button class="tab active" data-tab="cotacoes"><i class="fa-solid fa-table"></i> Cotações</button>
+      <button class="tab" data-tab="analise"><i class="fa-solid fa-magnifying-glass"></i> Análise</button>
+      <button class="tab" data-tab="produtos"><i class="fa-solid fa-tags"></i> Produtos</button>
+      <button class="tab" data-tab="fornecedores"><i class="fa-solid fa-truck"></i> Fornecedores</button>
+      <button class="tab" data-tab="config"><i class="fa-solid fa-gear"></i> Config</button>
+    </div>
+
+    <main id="main">
+      <section class="tabPane" id="tab-cotacoes">
+        <div class="card">
+          <div class="cardHead">
+            <div class="title"><i class="fa-solid fa-filter"></i> Filtros</div>
+            <div class="muted" style="font-size:12px; font-weight:750;">Busca em Produto/Fornecedor/Obs. Ordenação automática por melhor base.</div>
+          </div>
+          <div class="cardBody">
+            <div class="filters">
+              <div class="field">
+                <label for="fCategoria">Categoria</label>
+                <select id="fCategoria"></select>
+                <div class="hint">Padroniza leitura entre frios, frango, grãos, etc.</div>
+              </div>
+
+              <div class="field">
+                <label for="fFornecedor">Fornecedor</label>
+                <select id="fFornecedor"></select>
+                <div class="hint">Mostra somente o fornecedor selecionado.</div>
+              </div>
+
+              <div class="field">
+                <label for="fStatus">Status</label>
+                <select id="fStatus">
+                  <option value="all">Todos</option>
+                  <option value="OK">Completa</option>
+                  <option value="PENDENTE">Pendente</option>
+                </select>
+                <div class="hint">Sem preço ou sem base ficam pendentes/limitadas.</div>
+              </div>
+
+              <div class="field">
+                <label for="fBusca">Busca</label>
+                <input id="fBusca" placeholder="" />
+                <div class="hint">Filtra por produto/fornecedor/observações.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px;">
+          <div class="cardHead">
+            <div class="title"><i class="fa-solid fa-list-check"></i> Tabela Padronizada de Cotações</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;">
+              <span class="pill" id="pillFiltrados"><i class="fa-solid fa-eye"></i> 0 exibidos</span>
+              <span class="pill warn" id="pillSpread"><i class="fa-solid fa-arrows-left-right"></i> spreads > 5%: 0</span>
+            </div>
+          </div>
+
+          <div class="cardBody">
+            <div class="tableWrap">
+              <table id="tabela">
+                <thead>
+                  <tr>
+                    <th>Categoria</th>
+                    <th>Produto</th>
+                    <th>Fornecedor</th>
+                    <th class="right">Preço (R$)</th>
+                    <th>Unidade Informada</th>
+                    <th class="right">Preço Base</th>
+                    <th>Status</th>
+                    <th class="nowrap">Data</th>
+                    <th>Observações</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+
+            <div class="note">
+              <strong>Regras de cálculo:</strong>
+              “Preço Base” é calculado por unidade comparável (kg/L/un) usando conversões da aba <em>Config</em>.
+              Utilize o botão "Nova Cotação" para começar.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tabPane" id="tab-analise" style="display:none;">
+        <div class="card">
+          <div class="cardHead">
+            <div class="title"><i class="fa-solid fa-chart-simple"></i> Comparativo de Mercado</div>
+            <div class="muted" style="font-size:12px;">O sistema agrupa produtos iguais e compara quem vende mais barato.</div>
+          </div>
+          <div class="cardBody">
+            
+            <div style="background:#f0f9ff; border:1px solid #bae6fd; color:#0369a1; padding:12px; border-radius:12px; font-size:13px; margin-bottom:16px;">
+              <strong style="display:block; margin-bottom:4px;"><i class="fa-solid fa-circle-info"></i> Como a análise funciona?</strong>
+              O sistema converte tudo para <strong>1 kg</strong> ou <strong>1 un</strong>. <br>
+              Exemplo: Se o Fornecedor A vende <em>5kg a R$ 20,00</em> (R$ 4/kg) e o Fornecedor B vende <em>1kg a R$ 5,00</em>, o sistema avisa que o <strong>Fornecedor A é 20% mais barato</strong>.
+            </div>
+
+            <div id="analiseLista" style="display:flex; flex-direction:column; gap:12px;"></div>
+
+            <div id="analisePendencias" style="margin-top:20px;"></div>
+
+          </div>
+        </div>
+      </section>
+
+      <section class="tabPane" id="tab-produtos" style="display:none;">
+        <div class="card">
+          <div class="cardHead">
+            <div class="title"><i class="fa-solid fa-tags"></i> Produtos</div>
+            <div class="muted" style="font-size:12px; font-weight:750;">Cards com melhor preço base e fornecedor.</div>
+          </div>
+          <div class="cardBody">
+            <div class="productsGrid" id="prodGrid"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tabPane" id="tab-fornecedores" style="display:none;">
+        <div class="card">
+          <div class="cardHead">
+            <div class="title"><i class="fa-solid fa-truck"></i> Fornecedores</div>
+            <div class="muted" style="font-size:12px; font-weight:750;">Cobertura, pendências e média base (quando comparável).</div>
+          </div>
+          <div class="cardBody">
+            <div class="list" id="listForn"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tabPane" id="tab-config" style="display:none;">
+        <div class="card">
+          <div class="cardHead">
+            <div class="title"><i class="fa-solid fa-gear"></i> Configurações</div>
+            <div class="muted" style="font-size:12px; font-weight:750;">Conversões e persistência local.</div>
+          </div>
+          <div class="cardBody">
+            <div class="grid2">
+              <div>
+                <div style="font-weight:950; margin-bottom:10px;">Conversões de Unidade (chave → base)</div>
+                <div class="note" style="margin-top:0; margin-bottom:10px;">
+                  Ex.: “Un”, “Cx”, “Kg”.  
+                  A regra aplica por <strong>início do texto</strong> (case-insensitive).
+                </div>
+
+                <div class="tableWrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Chave de Unidade</th>
+                        <th>Base</th>
+                        <th class="right">Qtd. Base</th>
+                        <th class="right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbodyConv"></tbody>
+                  </table>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+                  <button class="btn" id="btnAddConv"><i class="fa-solid fa-plus"></i> Adicionar Conversão</button>
+                  <button class="btn" id="btnSave"><i class="fa-solid fa-floppy-disk"></i> Salvar (Local)</button>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-weight:950; margin-bottom:10px;">Backup / Restore</div>
+                <div class="note" style="margin-top:0;">
+                  Use JSON para backup do “banco” local. Isso evita perder o histórico da equipe.
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+                  <button class="btn" id="btnExportJSON"><i class="fa-solid fa-code"></i> Exportar JSON</button>
+                  <label class="btn">
+                    <i class="fa-solid fa-file-arrow-up"></i> Importar JSON
+                    <input id="fileJson" type="file" accept=".json" style="display:none;">
+                  </label>
+                </div>
+
+                <div class="note">
+                  <strong>Recomendação:</strong> padronize como sua equipe chama “unidades” (kg, cx 10kg, pct 400g, un 1L, sc 5kg, etc.)
+                  para manter análise confiável.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="ref">
+      <div class="card">
+        <div class="cardHead">
+          <div class="title"><i class="fa-solid fa-bullseye"></i> Valores de Referência</div>
+          <div class="refTitleRow">
+            <span class="tag">min • média • máx</span>
+          </div>
+        </div>
+        <div class="cardBody">
+          <div class="muted" id="refUpdated" style="font-size:12px; font-weight:750;">Atualizado: —</div>
+          <div class="refList" id="refList"></div>
+          <div class="note">
+            Referências são calculadas somente onde há <strong>Preço Base</strong>.
+            Ajuste conversões em <em>Config</em> para liberar comparações.
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <div class="modalBack" id="modalBack" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Nova Cotação">
+      <div class="modalHead">
+        <strong><i class="fa-solid fa-pen-to-square" style="color:var(--p);"></i> Nova Cotação</strong>
+        <button class="btn" id="btnCloseModal"><i class="fa-solid fa-xmark"></i> Fechar</button>
+      </div>
+      <div class="modalBody">
+        <div class="modalGrid">
+          <div>
+            <label style="font-size:12.5px; font-weight:950; display:block; margin-bottom:7px;">Categoria</label>
+            <input id="mCategory" placeholder="Ex.: Grãos, Frios..." />
+          </div>
+          <div>
+            <label style="font-size:12.5px; font-weight:950; display:block; margin-bottom:7px;">Produto</label>
+            <input id="mProduct" placeholder="Ex.: Arroz, Leite..." />
+          </div>
+          <div>
+            <label style="font-size:12.5px; font-weight:950; display:block; margin-bottom:7px;">Fornecedor</label>
+            <input id="mSupplier" placeholder="Ex.: Camil, Betânia..." />
+          </div>
+          <div>
+            <label style="font-size:12.5px; font-weight:950; display:block; margin-bottom:7px;">Data</label>
+            <input id="mDate" placeholder="YYYY-MM-DD" />
+          </div>
+          <div>
+            <label style="font-size:12.5px; font-weight:950; display:block; margin-bottom:7px;">Preço Total (R$)</label>
+            <input id="mPrice" type="number" step="0.01" placeholder="Ex.: 4.69" />
+          </div>
+          
+          <div>
+            <label style="font-size:12.5px; font-weight:950; display:block; margin-bottom:7px; color:var(--p);">
+              <i class="fa-solid fa-magic-wand-sparkles"></i> Qtd/Peso (Auto)
+            </label>
+            <input id="mQtdHelper" type="number" step="any" placeholder="Ex: 0.4 ou 24..." style="border-color:var(--p);" />
+          </div>
+
+          <div>
+            <label style="font-size:12.5px; font-weight:950; display:block; margin-bottom:7px;">Unidade (Resultado)</label>
+            <input id="mUnit" placeholder="Preenchido automaticamente..." />
+          </div>
+          
+          <div style="grid-column: 1 / -1;">
+            <label style="font-size:12.5px; font-weight:950; display:block; margin-bottom:7px;">Observações</label>
+            <textarea id="mNotes" placeholder="Prazo, condição, lote, frete..."></textarea>
+          </div>
+        </div>
+
+        <div class="note">
+          Digite a quantidade numérica no campo "Qtd/Peso" para gerar a unidade automaticamente.
+        </div>
+      </div>
+      <div class="modalActions">
+        <button class="btn" id="btnCancel"><i class="fa-solid fa-ban"></i> Cancelar</button>
+        <button class="btn primary" id="btnSaveRow"><i class="fa-solid fa-check"></i> Salvar Cotação</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /**********************
+     * UTIL
+     **********************/
+    const el = (id) => document.getElementById(id);
+
+    const fmtBRL = (n) => (n == null || !isFinite(n)) ? "—" : n.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+    const nowStamp = () => new Date().toLocaleString("pt-BR");
+    const normalizeText = (s) => String(s ?? "").toLowerCase().trim();
+    const safeNum = (v) => {
+      if (v == null) return null;
+      if (typeof v === "number" && isFinite(v)) return v;
+      const s = String(v).replace(/\./g,"").replace(",",".").trim();
+      const n = Number(s);
+      return isFinite(n) ? n : null;
+    };
+
+    function showToast(msg){
+      const t = el("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(()=> t.classList.remove("show"), 2600);
+    }
+
+    function groupBy(arr, keyFn){
+      const m = new Map();
+      for (const x of arr){
+        const k = keyFn(x);
+        if (!m.has(k)) m.set(k, []);
+        m.get(k).push(x);
+      }
+      return m;
+    }
+
+    /**********************
+     * DADOS (SEED)
+     * - AGORA VAZIO (BASE LIMPA)
+     **********************/
+    const DEFAULT_CONVERSIONS = [
+      { key:"kg", base:"kg", qty:1 },
+      { key:"l", base:"L", qty:1 },
+      { key:"un 1l", base:"L", qty:1 },
+      { key:"pct 400g", base:"kg", qty:0.4 },
+      { key:"cx 10kg", base:"kg", qty:10 },
+      { key:"sc 5kg", base:"kg", qty:5 },
+      { key:"sc 10kg", base:"kg", qty:10 },
+      { key:"sc", base:"kg", qty:10 } // ajuste aqui conforme padrão da empresa
+    ];
+
+    // INICIANDO VAZIO CONFORME SOLICITADO
+    const SEED_QUOTES = [];
+
+    /**********************
+     * STORAGE
+     * - Chave alterada para "clean_v2" para garantir base limpa
+     **********************/
+    const LS_KEY = "cotacao_mestre_v2_clean";
+    const LS_CONV = "cotacao_conversoes_v1";
+
+    function loadQuotes(){
+      try{
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return SEED_QUOTES.map(withId);
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : SEED_QUOTES.map(withId);
+      }catch{
+        return SEED_QUOTES.map(withId);
+      }
+    }
+
+    function saveQuotes(){
+      localStorage.setItem(LS_KEY, JSON.stringify(state.quotes));
+    }
+
+    function loadConversions(){
+      try{
+        const raw = localStorage.getItem(LS_CONV);
+        if (!raw) return DEFAULT_CONVERSIONS;
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : DEFAULT_CONVERSIONS;
+      }catch{
+        return DEFAULT_CONVERSIONS;
+      }
+    }
+
+    function saveConversions(){
+      localStorage.setItem(LS_CONV, JSON.stringify(state.conversions));
+    }
+
+    function withId(q){
+      return { id: crypto?.randomUUID?.() ?? String(Math.random()).slice(2), ...q };
+    }
+
+    const state = {
+      quotes: loadQuotes(),
+      conversions: loadConversions()
+    };
+
+    /**********************
+     * BASE PRICE
+     **********************/
+    function statusOf(q){
+      return (q.price == null || !isFinite(q.price)) ? "PENDENTE" : "OK";
+    }
+
+    function findConversion(unitStr){
+      const u = normalizeText(unitStr);
+      if (!u) return null;
+      // Match by "startsWith key"
+      const sorted = [...state.conversions].sort((a,b)=> normalizeText(b.key).length - normalizeText(a.key).length);
+      for (const c of sorted){
+        const key = normalizeText(c.key);
+        if (!key) continue;
+        if (u.startsWith(key)) return c;
+      }
+      return null;
+    }
+
+    function computeBase(q){
+      // If explicitBasePrice exists, use it and infer base unit if possible
+      const explicit = safeNum(q.explicitBasePrice);
+      if (explicit != null){
+        // base unit from conversion if exists; else fallback
+        const conv = findConversion(q.unit);
+        const baseUnit = conv?.base ?? (q.baseUnit ?? "kg");
+        return { basePrice: explicit, baseUnit };
+      }
+
+      const price = safeNum(q.price);
+      if (price == null) return { basePrice: null, baseUnit: null };
+
+      const conv = findConversion(q.unit);
+      if (!conv) return { basePrice: null, baseUnit: null };
+
+      const qty = safeNum(conv.qty);
+      if (qty == null || qty === 0) return { basePrice: null, baseUnit: null };
+
+      return { basePrice: price / qty, baseUnit: conv.base };
+    }
+
+    /**********************
+     * UI
+     **********************/
+    function supplierLabel(s){
+      const x = String(s ?? "").trim();
+      if (!x) return "—";
+      return x;
+    }
+
+    function rowStatusPill(status){
+      if (status === "OK") return `<span class="pill ok"><i class="fa-solid fa-circle-check"></i> Completa</span>`;
+      return `<span class="pill warn"><i class="fa-solid fa-hourglass-half"></i> Pendente</span>`;
+    }
+
+    function buildFilters() {
+      const cats = Array.from(new Set(state.quotes.map(q => q.category))).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+      const sups = Array.from(new Set(state.quotes.map(q => q.supplier))).filter(Boolean).sort((a,b)=>supplierLabel(a).localeCompare(supplierLabel(b)));
+
+      el("fCategoria").innerHTML =
+        `<option value="all">Todas</option>` +
+        cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+
+      el("fFornecedor").innerHTML =
+        `<option value="all">Todos</option>` +
+        sups.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(supplierLabel(s))}</option>`).join("");
+    }
+
+    function getFiltered() {
+      const cat = el("fCategoria").value;
+      const sup = el("fFornecedor").value;
+      const st  = el("fStatus").value;
+      const q   = normalizeText(el("fBusca").value);
+
+      return state.quotes.filter(x => {
+        const s = statusOf(x);
+        const hay = normalizeText(x.product) + " " + normalizeText(supplierLabel(x.supplier)) + " " + normalizeText(x.notes);
+
+        if (cat !== "all" && x.category !== cat) return false;
+        if (sup !== "all" && x.supplier !== sup) return false;
+        if (st !== "all" && s !== st) return false;
+        if (q && !hay.includes(q)) return false;
+        return true;
+      });
+    }
+
+    function renderTable() {
+      const data = getFiltered();
+      const tbody = el("tbody");
+      tbody.innerHTML = "";
+
+      // Order: best base first, then pendings
+      data.sort((a,b)=>{
+        const A = computeBase(a).basePrice, B = computeBase(b).basePrice;
+        const aOk = (A!=null && isFinite(A)), bOk=(B!=null && isFinite(B));
+        if (aOk && bOk) return A - B;
+        if (aOk && !bOk) return -1;
+        if (!aOk && bOk) return 1;
+        return String(a.product).localeCompare(String(b.product));
+      });
+
+      data.forEach(q => {
+        const st = statusOf(q);
+        const base = computeBase(q);
+        const baseStr = (base.basePrice == null) ? "—" : `${fmtBRL(base.basePrice)} / ${base.baseUnit}`;
+
+        const priceStr = fmtBRL(safeNum(q.price));
+        const dateStr = q.date ? escapeHtml(q.date) : "—";
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="nowrap">${escapeHtml(q.category ?? "")}</td>
+          <td>${escapeHtml(q.product ?? "")}</td>
+          <td class="nowrap">${escapeHtml(supplierLabel(q.supplier))}</td>
+          <td class="right num ${st==="OK"?"price":""}">${priceStr}</td>
+          <td class="nowrap">${escapeHtml(q.unit ?? "—")}</td>
+          <td class="right num">${baseStr}</td>
+          <td>${rowStatusPill(st)}</td>
+          <td class="nowrap muted">${dateStr}</td>
+          <td class="muted">${escapeHtml(q.notes ?? "")}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      el("pillFiltrados").innerHTML = `<i class="fa-solid fa-eye"></i> ${data.length} exibidos`;
+      updateHeaderBadges();
+      renderAnalysis();
+      renderProducts();
+      renderSuppliers();
+      renderReferences();
+      buildFilters();
+    }
+
+    function updateHeaderBadges(){
+      const total = state.quotes.length;
+      const pend = state.quotes.filter(q => statusOf(q)==="PENDENTE").length;
+
+      el("badgeTotal").innerHTML = `<i class="fa-solid fa-database"></i> ${total} registros`;
+      el("badgePend").innerHTML  = `<i class="fa-solid fa-hourglass-half"></i> ${pend} pendentes`;
+    }
+
+    function calcSpreads(){
+      const valid = state.quotes
+        .map(q => ({...q, _base: computeBase(q)}))
+        .filter(q => q._base.basePrice != null && isFinite(q._base.basePrice));
+
+      const byProd = groupBy(valid, q => `${q.category}||${q.product}||${q._base.baseUnit}`);
+      const spreads = [];
+
+      for (const [k, items] of byProd.entries()){
+        if (items.length < 2) continue;
+        const prices = items.map(i => i._base.basePrice).sort((a,b)=>a-b);
+        const min = prices[0], max = prices[prices.length-1];
+        const spread = (max - min) / min;
+        if (isFinite(spread) && spread > 0){
+          const [category, product, baseUnit] = k.split("||");
+          spreads.push({ category, product, baseUnit, min, max, spread, count: items.length });
+        }
+      }
+
+      spreads.sort((a,b)=> b.spread - a.spread);
+      return spreads;
+    }
+
+    function renderAnalysis(){
+      const container = document.getElementById("analiseLista"); // Certifique-se que existe essa div no HTML
+      const containerPend = document.getElementById("analisePendencias"); // E essa também
+      
+      // Se não tiver os containers (caso tenha apagado sem querer), cria fallback
+      if(!container) return; 
+      
+      container.innerHTML = "";
+      if(containerPend) containerPend.innerHTML = "";
+
+      // 1. Cálculos preliminares
+      const calculados = state.quotes.map(q => {
+        const base = computeBase(q);
+        return { ...q, _basePrice: base.basePrice, _baseUnit: base.baseUnit };
+      });
+
+      const validos = calculados.filter(c => c._basePrice !== null && isFinite(c._basePrice));
+      const pendentes = calculados.filter(c => c._basePrice === null || !isFinite(c._basePrice));
+
+      // 2. Agrupamento
+      const grupos = {};
+      validos.forEach(item => {
+        const chave = item.category + "||" + item.product + "||" + item._baseUnit;
+        if(!grupos[chave]) grupos[chave] = [];
+        grupos[chave].push(item);
+      });
+
+      const listaCards = [];
+      let uniqueIdCounter = 0;
+
+      for(const chave in grupos){
+        const itens = grupos[chave];
+        if(itens.length < 2) continue; // Precisa de pelo menos 2 para comparar
+
+        // Ordena: Menor preço primeiro
+        itens.sort((a,b) => a._basePrice - b._basePrice);
+        
+        const melhor = itens[0];
+        const pior = itens[itens.length - 1];
+        
+        const diferenca = pior._basePrice - melhor._basePrice;
+        const economiaPct = ((diferenca / pior._basePrice) * 100).toFixed(1);
+        
+        uniqueIdCounter++;
+        const uId = uniqueIdCounter;
+
+        // HTML Completo (Didático + Simulador)
+        const cardHTML = `
+          <div class="ana-card">
+            <div class="ana-header">
+              <div>
+                <strong style="font-size:15px; color:#0f172a;">${escapeHtml(melhor.product)}</strong>
+                <div style="font-size:12px; color:#64748b;">${escapeHtml(melhor.category)} • Base: 1 ${melhor._baseUnit}</div>
+              </div>
+              <span class="pill ok" style="font-size:12px;">Economia ${economiaPct}%</span>
+            </div>
+
+            <div class="ana-comp">
+              
+              <div class="ana-box win">
+                <div style="font-size:10px; color:#166534; font-weight:800; text-transform:uppercase; margin-bottom:4px;">
+                  <i class="fa-solid fa-trophy"></i> Melhor Custo
+                </div>
+                <div style="font-weight:900; color:#14532d; font-size:16px;">${fmtBRL(melhor._basePrice)}</div>
+                <div style="font-size:12px; color:#15803d; margin-top:2px;">Forn: <strong>${escapeHtml(melhor.supplier)}</strong></div>
+                <div style="font-size:11px; color:#86efac; margin-top:4px; padding-top:4px; border-top:1px solid rgba(22,163,74,0.2);">
+                  (Cotado: ${fmtBRL(melhor.price)} em ${melhor.unit})
+                </div>
+              </div>
+
+              <div style="text-align:center; color:#cbd5e1; font-size:11px; font-weight:700;">VS</div>
+
+              <div class="ana-box lose">
+                <div style="font-size:10px; color:#991b1b; font-weight:800; text-transform:uppercase; margin-bottom:4px;">
+                  Mais Caro
+                </div>
+                <div style="font-weight:900; color:#7f1d1d; font-size:16px;">${fmtBRL(pior._basePrice)}</div>
+                <div style="font-size:12px; color:#991b1b; margin-top:2px;">Forn: <strong>${escapeHtml(pior.supplier)}</strong></div>
+                <div style="font-size:11px; color:#fca5a5; margin-top:4px; padding-top:4px; border-top:1px solid rgba(220,38,38,0.2);">
+                  (Cotado: ${fmtBRL(pior.price)} em ${pior.unit})
+                </div>
+              </div>
+
+            </div>
+
+            <div style="margin-top:10px; margin-bottom:6px; font-size:12px; color:#475569;">
+              <i class="fa-solid fa-lightbulb" style="color:#eab308;"></i> 
+              Comprando no <strong>${escapeHtml(melhor.supplier)}</strong>, você economiza 
+              <strong>${fmtBRL(diferenca)}</strong> por ${melhor._baseUnit} em relação à pior oferta.
+            </div>
+
+            <div class="sim-box">
+              <div class="sim-title"><i class="fa-solid fa-calculator"></i> Simulador de Venda (Unitário)</div>
+              <div class="sim-grid">
+                <div class="sim-input">
+                  <input type="number" step="0.01" placeholder="R$ Venda" 
+                    oninput="calcSimulation(${uId}, ${melhor._basePrice}, this.value)">
+                </div>
+                <div class="sim-results" id="res-${uId}">
+                  <span class="sim-tag">Markup: <strong>—%</strong></span>
+                  <span class="sim-tag">Margem: <strong>—%</strong></span>
+                  <span class="sim-tag">Índice: <strong>—</strong></span>
+                  <span class="sim-tag" style="background:#f1f5f9; border-color:#e2e8f0; color:#64748b;">
+                    Lucro: <strong>R$ —</strong>
+                  </span>
+                </div>
+              </div>
+              <div style="font-size:11px; color:#94a3b8; margin-top:6px;">
+                Cálculo baseado no melhor custo (R$ ${melhor._basePrice.toFixed(2)}).
+              </div>
+            </div>
+
+          </div>
+        `;
+        
+        listaCards.push({ html: cardHTML, savings: diferenca });
+      }
+
+      // Ordenar por maior economia em Reais
+      listaCards.sort((a,b) => b.savings - a.savings);
+
+      if(listaCards.length > 0){
+        container.innerHTML = listaCards.map(c => c.html).join("");
+      } else {
+        container.innerHTML = `
+          <div style="text-align:center; padding:40px; color:#64748b;">
+            <i class="fa-solid fa-scale-unbalanced" style="font-size:32px; margin-bottom:14px; display:block; color:#cbd5e1;"></i>
+            Para liberar a análise comparativa e o simulador, <br>
+            você precisa de pelo menos <strong>2 fornecedores</strong> para o mesmo produto.
+          </div>
+        `;
+      }
+
+      // Renderiza Pendências (simples)
+      if(containerPend && pendentes.length > 0){
+        containerPend.innerHTML = `
+          <div style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:14px;">
+            <div style="font-size:13px; font-weight:900; color:#b45309; margin-bottom:8px;">
+              <i class="fa-solid fa-triangle-exclamation"></i> Produtos não analisados (Incompletos):
+            </div>
+            <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:10px;">
+              ${pendentes.slice(0,10).map(p => `
+                <div style="font-size:12px; color:#7c2d12; border-bottom:1px solid #ffedd5; padding:4px 0;">
+                  <strong>${escapeHtml(p.product)}</strong> (${escapeHtml(p.supplier)}): Sem preço ou unidade não convertida.
+                </div>
+              `).join("")}
+              ${pendentes.length > 10 ? `<div style="font-size:11px; margin-top:4px; color:#c2410c;">+ ${pendentes.length - 10} outros itens...</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    /* --- FUNÇÃO DE CÁLCULO AO VIVO --- */
+    function calcSimulation(id, custo, valorVendaStr){
+      const venda = parseFloat(valorVendaStr.replace(",",".")); // Aceita vírgula
+      const divRes = document.getElementById(`res-${id}`);
+      
+      // Se apagar o valor, reseta
+      if(!venda || venda <= 0){
+        divRes.innerHTML = `
+          <span class="sim-tag">Markup: <strong>—%</strong></span>
+          <span class="sim-tag">Margem: <strong>—%</strong></span>
+          <span class="sim-tag">Índice: <strong>—</strong></span>
+          <span class="sim-tag">Lucro: <strong>R$ —</strong></span>
+        `;
+        return;
+      }
+
+      const lucro = venda - custo;
+      const markup = ((venda - custo) / custo) * 100; // Sobre o Custo
+      const margem = ((venda - custo) / venda) * 100; // Sobre a Venda
+      const indice = venda / custo;
+
+      // Cores para lucro ou prejuízo
+      const isPositive = lucro >= 0;
+      const color = isPositive ? "#166534" : "#dc2626";
+      const bg = isPositive ? "#f0fdf4" : "#fef2f2";
+      const border = isPositive ? "#bbf7d0" : "#fecaca";
+
+      divRes.innerHTML = `
+        <span class="sim-tag" title="Percentual adicionado ao custo">Markup: <strong>${markup.toFixed(1)}%</strong></span>
+        <span class="sim-tag" title="Percentual de lucro sobre a venda">Margem: <strong>${margem.toFixed(1)}%</strong></span>
+        <span class="sim-tag" title="Multiplicador (Venda / Custo)">Índice: <strong>${indice.toFixed(2)}x</strong></span>
+        <span class="sim-tag" style="background:${bg}; border-color:${border}; color:${color}; min-width:100px;">
+          Lucro: <strong>${lucro.toLocaleString("pt-BR", {style:"currency", currency:"BRL"})}</strong>
+        </span>
+      `;
+    }
+    /**********************
+     * CÁLCULO AO VIVO
+     **********************/
+    function calcSimulation(id, custo, valorVendaStr){
+      const venda = parseFloat(valorVendaStr);
+      const divRes = document.getElementById(`res-${id}`);
+      
+      if(!venda || venda <= 0){
+        // Reseta se estiver vazio
+        divRes.innerHTML = `
+          <span class="sim-tag">Markup: <strong>—%</strong></span>
+          <span class="sim-tag">Margem: <strong>—%</strong></span>
+          <span class="sim-tag">Índice: <strong>—</strong></span>
+          <span class="sim-tag">Lucro: <strong>R$ —</strong></span>
+        `;
+        return;
+      }
+
+      const lucro = venda - custo;
+      
+      // MARKUP: (Venda - Custo) / Custo * 100
+      // Quanto você coloca "em cima" do preço
+      const markup = ((venda - custo) / custo) * 100;
+
+      // MARGEM: (Venda - Custo) / Venda * 100
+      // Quanto sobra limpo no final da venda
+      const margem = ((venda - custo) / venda) * 100;
+
+      // ÍNDICE (FATOR): Venda / Custo
+      // Ex: Comprou a 10, Vendeu a 20 -> Índice 2.0x
+      const indice = venda / custo;
+
+      // Cores dinâmicas (se prejuízo, fica vermelho)
+      const color = lucro >= 0 ? "#166534" : "#dc2626";
+      const bg = lucro >= 0 ? "#f0fdf4" : "#fef2f2";
+      const border = lucro >= 0 ? "#bbf7d0" : "#fecaca";
+
+      divRes.innerHTML = `
+        <span class="sim-tag" title="Quanto adicionou sobre o custo">Markup: <strong>${markup.toFixed(1)}%</strong></span>
+        <span class="sim-tag" title="Quanto sobra do valor da venda">Margem: <strong>${margem.toFixed(1)}%</strong></span>
+        <span class="sim-tag" title="Multiplicador do custo">Índice: <strong>${indice.toFixed(2)}x</strong></span>
+        <span class="sim-tag" style="background:${bg}; border-color:${border}; color:${color};">
+          Lucro: <strong>${lucro.toLocaleString("pt-BR", {style:"currency", currency:"BRL"})}</strong>
+        </span>
+      `;
+    }
+    function renderProducts(){
+      const byProd = groupBy(state.quotes, q => `${q.category}||${q.product}`);
+      const cards = [];
+
+      for (const [k, items] of byProd.entries()){
+        const [category, product] = k.split("||");
+
+        const candidates = items
+          .map(x => ({...x, _base: computeBase(x)}))
+          .filter(x => x._base.basePrice != null && isFinite(x._base.basePrice))
+          .sort((a,b)=> a._base.basePrice - b._base.basePrice);
+
+        const best = candidates[0] ?? null;
+        const icon = category.includes("UHT") ? "fa-bottle-water"
+                   : category.includes("Açúcar") ? "fa-cubes-stacked"
+                   : category.includes("Grãos") ? "fa-bowl-rice"
+                   : category.includes("Frios") ? "fa-snowflake"
+                   : category.includes("Frango") ? "fa-drumstick-bite"
+                   : "fa-box";
+
+        cards.push({ category, product, best, icon, suppliers: new Set(items.map(i=>i.supplier)).size });
+      }
+
+      cards.sort((a,b)=>{
+        const A = a.best?. _base?.basePrice, B = b.best?. _base?.basePrice;
+        const aOk = (A!=null && isFinite(A)), bOk = (B!=null && isFinite(B));
+        if (aOk && bOk) return A - B;
+        if (aOk && !bOk) return -1;
+        if (!aOk && bOk) return 1;
+        return a.product.localeCompare(b.product);
+      });
+
+      el("prodGrid").innerHTML = cards.map(c => {
+        const bestLine = c.best
+          ? `<div class="best"><span>Melhor base</span><span class="num">${fmtBRL(c.best._base.basePrice)} / ${escapeHtml(c.best._base.baseUnit)}</span></div>
+             <div class="meta" style="margin-top:6px;"><span>${escapeHtml(supplierLabel(c.best.supplier))}</span><span>${escapeHtml(c.best.date || "—")}</span></div>`
+          : `<div class="best"><span>Melhor base</span><span class="muted">Sem base</span></div>
+             <div class="meta" style="margin-top:6px;"><span class="muted">Aguardando dados</span><span class="muted">—</span></div>`;
+
+        return `
+          <div class="pCard">
+            <div class="pImg"><i class="fa-solid ${c.icon}"></i></div>
+            <div class="pInfo">
+              <strong title="${escapeAttr(c.product)}">${escapeHtml(c.product)}</strong>
+              <div class="meta"><span>${escapeHtml(c.category)}</span><span>${c.suppliers} forn.</span></div>
+              ${bestLine}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderSuppliers(){
+      const bySup = groupBy(state.quotes, q => q.supplier);
+      const rows = [];
+
+      for (const [sup, items] of bySup.entries()){
+        const pend = items.filter(q => statusOf(q)==="PENDENTE").length;
+
+        const valid = items
+          .map(q => computeBase(q).basePrice)
+          .filter(v => v != null && isFinite(v));
+
+        const avg = valid.length ? valid.reduce((a,b)=>a+b,0)/valid.length : null;
+
+        rows.push({ sup, coverage: items.length, pend, avg });
+      }
+
+      rows.sort((a,b)=>{
+        const aOk = a.avg!=null && isFinite(a.avg), bOk = b.avg!=null && isFinite(b.avg);
+        if (aOk && bOk) return a.avg - b.avg;
+        if (aOk && !bOk) return -1;
+        if (!aOk && bOk) return 1;
+        return supplierLabel(a.sup).localeCompare(supplierLabel(b.sup));
+      });
+
+      el("listForn").innerHTML = rows.length ? rows.map(r => {
+        const pill = r.pend === 0 ? "ok" : "warn";
+        const pillTxt = r.pend === 0 ? "OK" : `${r.pend} pend.`;
+        return `
+          <div class="row">
+            <div class="left">
+              <strong>${escapeHtml(supplierLabel(r.sup))}</strong>
+              <span>Cobertura: ${r.coverage} • Pendências: ${r.pend}</span>
+            </div>
+            <div class="right">
+              <span class="pill ${pill}"><i class="fa-solid fa-clipboard-check"></i> ${pillTxt}</span>
+              <div class="muted" style="font-size:12px;">Média base: ${r.avg==null ? "—" : fmtBRL(r.avg)}</div>
+            </div>
+          </div>
+        `;
+      }).join("") : emptyList("Sem fornecedores", "Importe ou cadastre cotações.");
+    }
+
+    function renderReferences(){
+      const valid = state.quotes
+        .map(q => ({...q, _base: computeBase(q)}))
+        .filter(q => q._base.basePrice != null && isFinite(q._base.basePrice));
+
+      const byCatBase = groupBy(valid, q => `${q.category}||${q._base.baseUnit}`);
+      const blocks = [];
+
+      for (const [k, items] of byCatBase.entries()){
+        const [category, baseUnit] = k.split("||");
+        const values = items.map(i => i._base.basePrice).sort((a,b)=>a-b);
+        const min = values[0];
+        const max = values[values.length-1];
+        const avg = values.reduce((a,b)=>a+b,0)/values.length;
+        blocks.push({ category, baseUnit, min, avg, max, count: values.length });
+      }
+
+      blocks.sort((a,b)=> a.category.localeCompare(b.category));
+      el("refUpdated").textContent = "Atualizado: " + nowStamp();
+
+      el("refList").innerHTML = blocks.length ? blocks.map(b => `
+        <div class="refItem">
+          <div class="refTop">
+            <div>
+              <strong>${escapeHtml(b.category)}</strong>
+              <span>${b.count} preços • base: ${escapeHtml(b.baseUnit)}</span>
+            </div>
+            <span class="pill"><i class="fa-solid fa-bullseye"></i> referência</span>
+          </div>
+          <div class="refNums">
+            <div class="refNum"><b>Mín.</b><div class="num">${fmtBRL(b.min)}</div></div>
+            <div class="refNum"><b>Média</b><div class="num">${fmtBRL(b.avg)}</div></div>
+            <div class="refNum"><b>Máx.</b><div class="num">${fmtBRL(b.max)}</div></div>
+          </div>
+        </div>
+      `).join("") : `
+        <div class="refItem">
+          <div class="refTop">
+            <div>
+              <strong>Sem base comparável</strong>
+              <span>Ajuste conversões (Config) para gerar referência.</span>
+            </div>
+            <span class="pill warn"><i class="fa-solid fa-triangle-exclamation"></i> atenção</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function emptyList(title, subtitle){
+      return `
+        <div class="row">
+          <div class="left">
+            <strong>${escapeHtml(title)}</strong>
+            <span>${escapeHtml(subtitle)}</span>
+          </div>
+          <div class="right muted">—</div>
+        </div>
+      `;
+    }
+
+    function switchTab(name){
+      document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+      document.querySelectorAll(".tabPane").forEach(p => p.style.display = "none");
+      el("tab-"+name).style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function exportCSVFromFiltered(){
+      const data = getFiltered().map(q => {
+        const st = statusOf(q);
+        const b = computeBase(q);
+        return {
+          Categoria: q.category ?? "",
+          Produto: q.product ?? "",
+          Fornecedor: supplierLabel(q.supplier),
+          "Preço (R$)": safeNum(q.price) ?? "",
+          "Unidade Informada": q.unit ?? "",
+          "Preço Base": (b.basePrice==null ? "" : b.basePrice),
+          "Unidade Base": (b.baseUnit==null ? "" : b.baseUnit),
+          Status: st,
+          Data: q.date ?? "",
+          Observações: q.notes ?? "",
+          Fonte: q.source ?? ""
+        };
+      });
+
+      const headers = Object.keys(data[0] ?? {
+        Categoria:"", Produto:"", Fornecedor:"", "Preço (R$)":"", "Unidade Informada":"",
+        "Preço Base":"", "Unidade Base":"", Status:"", Data:"", Observações:"", Fonte:""
+      });
+
+      const escapeCSV = (v) => {
+        const s = String(v ?? "");
+        if (/[",\n;]/.test(s)) return `"${s.replaceAll('"','""')}"`;
+        return s;
+      };
+
+      const lines = [
+        headers.join(";"),
+        ...data.map(row => headers.map(h => escapeCSV(row[h])).join(";"))
+      ];
+
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `cotacoes_filtradas_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    /**********************
+     * CONFIG: CONVERSÕES
+     **********************/
+    function renderConversions(){
+      const tb = el("tbodyConv");
+      tb.innerHTML = "";
+      state.conversions.forEach((c, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><input data-idx="${idx}" data-k="key" value="${escapeAttr(c.key)}"></td>
+          <td><input data-idx="${idx}" data-k="base" value="${escapeAttr(c.base)}"></td>
+          <td><input class="right" data-idx="${idx}" data-k="qty" value="${escapeAttr(String(c.qty))}"></td>
+          <td class="right">
+            <button class="btn danger" data-del="${idx}" title="Remover">
+              <i class="fa-solid fa-trash"></i> Remover
+            </button>
+          </td>
+        `;
+        tb.appendChild(tr);
+      });
+
+      // bind edits
+      tb.querySelectorAll("input").forEach(inp => {
+        inp.addEventListener("input", () => {
+          const idx = Number(inp.dataset.idx);
+          const k = inp.dataset.k;
+          if (!Number.isInteger(idx) || !k) return;
+          if (k === "qty") state.conversions[idx][k] = safeNum(inp.value) ?? 0;
+          else state.conversions[idx][k] = inp.value;
+        });
+      });
+
+      tb.querySelectorAll("button[data-del]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const idx = Number(btn.dataset.del);
+          state.conversions.splice(idx, 1);
+          renderConversions();
+          renderTable();
+        });
+      });
+    }
+
+    /**********************
+     * MODAL: NOVA COTAÇÃO
+     **********************/
+    function openModal(){
+      el("modalBack").style.display = "flex";
+      el("modalBack").setAttribute("aria-hidden","false");
+      
+      // Lista atualizada de IDs para limpar (incluindo mQtdHelper)
+      ["mCategory","mProduct","mSupplier","mDate","mPrice","mUnit","mNotes","mQtdHelper"].forEach(id => el(id).value = "");
+      
+      el("mCategory").focus();
+    }
+    function closeModal(){
+      el("modalBack").style.display = "none";
+      el("modalBack").setAttribute("aria-hidden","true");
+    }
+
+    function addRowFromModal(){
+      const category = el("mCategory").value.trim();
+      const product  = el("mProduct").value.trim();
+      const supplier = el("mSupplier").value.trim();
+      const date     = el("mDate").value.trim();
+      const price    = safeNum(el("mPrice").value);
+      const unit     = el("mUnit").value.trim();
+      const notes    = el("mNotes").value.trim();
+
+      if (!category || !product || !supplier){
+        showToast("Preencha no mínimo: Categoria, Produto e Fornecedor.");
+        return;
+      }
+
+      state.quotes.unshift(withId({
+        category, product, supplier,
+        price, unit,
+        date, notes,
+        source: "manual"
+      }));
+
+      saveQuotes();
+      closeModal();
+      renderTable();
+      showToast("Cotação adicionada.");
+    }
+
+    /**********************
+     * IMPORTAÇÃO XLSX
+     * - Mantém lógica básica de importação, mas agora depende de arquivos externos
+     **********************/
+    function importXlsx(file){
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try{
+          const data = new Uint8Array(e.target.result);
+          const wb = XLSX.read(data, { type: "array" });
+
+          const imported = [];
+
+          for (const sheetName of wb.SheetNames){
+            const ws = wb.Sheets[sheetName];
+            const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true });
+            const found = parseKnownBlocks(file.name, sheetName, aoa);
+            imported.push(...found);
+          }
+
+          if (!imported.length){
+            showToast("Importação não encontrou linhas padrão. Verifique o console ou use o botão 'Nova Cotação'.");
+            return;
+          }
+
+          const normalized = imported.map(withId).map(q => ({
+            ...q,
+            price: safeNum(q.price),
+            unit: q.unit ?? "",
+            date: q.date ?? "",
+            notes: q.notes ?? "",
+            source: q.source ?? file.name
+          }));
+
+          state.quotes = [...normalized, ...state.quotes];
+          saveQuotes();
+          renderTable();
+          showToast(`Importado: ${normalized.length} linhas do XLSX.`);
+        }catch(err){
+          console.error(err);
+          showToast("Falha ao importar XLSX. Veja console para detalhes.");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function parseKnownBlocks(filename, sheetName, aoa){
+      // Parser genérico ou específico para seus arquivos (mantido do original)
+      const name = normalizeText(filename);
+      const sname = normalizeText(sheetName);
+
+      if (name.includes("diego")) return parsediego(aoa, filename);
+      if (name.includes("arroz") || name.includes("elaine")) return parseelaine(aoa, sheetName, filename);
+      
+      // Fallback simples (tenta achar colunas padrão)
+      // Se não encontrar parsers específicos, retorna vazio
+      return [];
+    }
+
+    function parsediego(aoa, source){
+      const rows = [];
+      let headerIdx = -1;
+      for (let r=0; r<Math.min(aoa.length, 20); r++){
+        const row = aoa[r].map(x => normalizeText(x));
+        if (row.includes("aurora") || row.some(x => x.startsWith("brf"))){
+          headerIdx = r; break;
+        }
+      }
+      if (headerIdx >= 0){
+        const hdr = aoa[headerIdx];
+        const suppliers = [];
+        for (let c=1; c<10; c++){
+          if (hdr[c]) suppliers.push({ col:c, sup:String(hdr[c]) });
+        }
+        for (let r=headerIdx+1; r<aoa.length; r++){
+          const prod = aoa[r]?.[0];
+          if (!prod) continue;
+          const p = String(prod).trim();
+          if (!p) continue;
+          suppliers.forEach(s => {
+            const price = safeNum(aoa[r]?.[s.col]);
+            rows.push({
+              category:"Frios", product:p, supplier:s.sup,
+              price: price, unit:"kg", date:"",
+              notes: price==null?"Pendente":"", source
+            });
+          });
+        }
+      }
+      return rows;
+    }
+
+    function parseelaine(aoa, sheetName, source){
+      const rows = [];
+      const s = normalizeText(sheetName);
+
+      // Lógica legada para suportar seus arquivos antigos
+      if (s.includes("planilha3") || s.includes("dezembro")){
+        let currentBrand = null;
+        for (let r=0; r<aoa.length; r++){
+          const c0=aoa[r]?.[0], c1=aoa[r]?.[1], c2=aoa[r]?.[2];
+          const t0 = normalizeText(c0);
+          if (c0 && !["parbo","bco"].includes(t0) && safeNum(c1)==null && safeNum(c2)==null){
+            currentBrand = String(c0).trim(); continue;
+          }
+          if (["parbo","bco"].includes(t0) && currentBrand){
+            const price = safeNum(c1);
+            const base = safeNum(c2);
+            if (price != null || base != null){
+              rows.push({
+                category:"Grãos", product:`${currentBrand} — ${t0}`, supplier:currentBrand,
+                price, unit:"sc", date:"", notes:"Importado", explicitBasePrice:base, source
+              });
+            }
+          }
+        }
+      }
+      else if (s.includes("planilha2")){
+         // Açúcar
+        for (let r=0; r<aoa.length; r++){
+          const row = aoa[r]||[];
+          const idxAcucar = row.map(x=>normalizeText(x)).findIndex(x => x.includes("cotação açucar"));
+          if (idxAcucar >= 0){
+            for (let rr=r+1; rr<Math.min(aoa.length, r+20); rr++){
+              const sup = aoa[rr]?.[idxAcucar];
+              const price = safeNum(aoa[rr+1]?.[idxAcucar]);
+              if (sup && price != null){
+                rows.push({
+                  category:"Açúcar", product:"Açúcar", supplier:String(sup), price,
+                  unit:"kg", date:"2025-12-03", notes:"Importado", source
+                });
+              }
+            }
+          }
+        }
+        // UHT
+        for (let r=0; r<aoa.length; r++){
+          const text = normalizeText(aoa[r]?.[0]);
+          if (text.includes("cotação uht")){
+            for (let rr=r+1; rr<Math.min(aoa.length, r+30); rr++){
+              const sup = aoa[rr]?.[0];
+              const price = safeNum(aoa[rr]?.[2]);
+              if (sup && price != null){
+                rows.push({
+                  category:"UHT", product:"Leite UHT (1L)", supplier:String(sup), price,
+                  unit:"un 1L", date:"2025-12-05", notes:"Importado", source
+                });
+              }
+            }
+          }
+        }
+      }
+      return rows;
+    }
+
+    /**********************
+     * SEGURANÇA: BLOQUEIO DE COLAR
+     **********************/
+    function enablePasteBlock(){
+      document.addEventListener("paste", (e) => { e.preventDefault(); showToast("Ação de colar bloqueada nesta página."); });
+      document.addEventListener("keydown", (e) => {
+        const key = e.key?.toLowerCase();
+        if ((e.ctrlKey || e.metaKey) && key === "v"){
+          e.preventDefault();
+          showToast("Ctrl+V bloqueado. Use importação XLSX/JSON ou formulário.");
+        }
+      });
+      document.addEventListener("drop", (e) => { e.preventDefault(); showToast("Arrastar/soltar bloqueado."); });
+      document.addEventListener("dragover", (e) => e.preventDefault());
+    }
+
+    /**********************
+     * HTML ESCAPE
+     **********************/
+    function escapeHtml(str){
+      return String(str ?? "")
+        .replaceAll("&","&")
+        .replaceAll("<","<")
+        .replaceAll(">",">")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function escapeAttr(str){ return escapeHtml(str).replaceAll("\n"," "); }
+
+    /**********************
+     * EVENTS
+     **********************/
+    function bind(){
+      document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
+
+      ["fCategoria","fFornecedor","fStatus","fBusca"].forEach(id => {
+        el(id).addEventListener("input", renderTable);
+        el(id).addEventListener("change", renderTable);
+      });
+
+      el("btnExportCSV").addEventListener("click", () => { exportCSVFromFiltered(); showToast("CSV gerado com registros filtrados."); });
+      el("btnVerProdutos").addEventListener("click", () => switchTab("produtos"));
+
+      el("btnNovo").addEventListener("click", openModal);
+      el("btnCloseModal").addEventListener("click", closeModal);
+      el("btnCancel").addEventListener("click", closeModal);
+      el("btnSaveRow").addEventListener("click", addRowFromModal);
+
+// --- LÓGICA INTELIGENTE DE UNIDADES (CORRIGIDA: DECIMAL VISUAL) ---
+      el("mQtdHelper").addEventListener("input", (e) => {
+        const raw = e.target.value; // Pega o texto exato digitado
+        const valStr = raw.replace(",", ".");
+        const val = parseFloat(valStr);
+        const unitField = el("mUnit");
+
+        // Se estiver vazio ou não for número, limpa
+        if (!raw || isNaN(val)) {
+          unitField.value = "";
+          return;
+        }
+
+        // REGRA 1: Se TEM pontuação visual (vírgula ou ponto), é PESO (kg)
+        // Ex: "12,00" vira kg. "0,5" vira kg.
+        if (raw.includes(",") || raw.includes(".")) {
+           unitField.value = `${valStr} kg`;
+        }
+        // REGRA 2: Se NÃO tem pontuação, é INTEIRO (Logística)
+        // Ex: "12" vira dz. "24" vira cx.
+        else {
+          if (val === 12) {
+            unitField.value = "dz"; // Exatamente 12 inteiro = Dúzia
+          } else if (val > 12) {
+            unitField.value = `cx ${val}un`; // Maior que 12 = Caixa
+          } else {
+            // Menor que 12 (ex: 1, 6, 10)
+            unitField.value = val === 1 ? "un" : `${val} un`;
+          }
+        }
+      });
+
+      el("modalBack").addEventListener("click", (e) => {
+        if (e.target === el("modalBack")) closeModal();
+      });
+
+      // Import XLSX
+      el("fileXlsx").addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        importXlsx(file);
+        e.target.value = "";
+      });
+
+      // Reset
+      el("btnReset").addEventListener("click", () => {
+        if (!confirm("Confirmar RESET? Isso apaga todos os dados locais.")) return;
+        localStorage.removeItem(LS_KEY);
+        // localStorage.removeItem(LS_CONV); // descomente se quiser resetar conversoes tbm
+        state.quotes = [];
+        renderTable();
+        showToast("Base zerada com sucesso.");
+      });
+
+      // Config
+      el("btnAddConv").addEventListener("click", () => {
+        state.conversions.push({ key:"", base:"kg", qty:1 });
+        renderConversions();
+      });
+
+      el("btnSave").addEventListener("click", () => {
+        saveConversions();
+        saveQuotes();
+        renderTable();
+        showToast("Configurações e dados salvos localmente.");
+      });
+
+      // JSON backup
+      el("btnExportJSON").addEventListener("click", () => {
+        const payload = { quotes: state.quotes, conversions: state.conversions, exportedAt: new Date().toISOString() };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type:"application/json;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `cotacao_backup_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast("Backup JSON exportado.");
+      });
+
+      el("fileJson").addEventListener("change", async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try{
+          const txt = await file.text();
+          const obj = JSON.parse(txt);
+          if (obj?.quotes && obj?.conversions){
+            state.quotes = Array.isArray(obj.quotes) ? obj.quotes : state.quotes;
+            state.conversions = Array.isArray(obj.conversions) ? obj.conversions : state.conversions;
+            saveQuotes(); saveConversions();
+            renderConversions();
+            renderTable();
+            showToast("Backup JSON importado.");
+          }else{
+            showToast("JSON inválido: esperado {quotes, conversions}.");
+          }
+        }catch(err){
+          console.error(err);
+          showToast("Falha ao importar JSON.");
+        }
+        e.target.value = "";
+      });
+
+      ["mCategory","mProduct","mSupplier","mDate","mPrice","mUnit","mNotes"].forEach(id => {
+        el(id).addEventListener("paste", (e)=>{ e.preventDefault(); showToast("Colar bloqueado. Digite manualmente."); });
+      });
+    }
+
+    /**********************
+     * START
+     **********************/
+    enablePasteBlock();
+    renderConversions();
+    buildFilters();
+    bind();
+    renderTable();
+  </script>
+</body>
+</html>
