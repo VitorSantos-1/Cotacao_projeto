@@ -97,3 +97,63 @@ frontend/beta.html          -> Interface de demonstração
 
 José Vitor Santos Pinheiro — Análise de Dados e Inteligência Comercial (Varejo, Indústria e Distribuição).
 Contato: vytorsantt@gmail.com
+
+## 🗺️ Modelo de Dados (DER)
+
+Diagrama entidade-relacionamento do backend de cotação (PostgreSQL/Supabase). Renderizado pelo GitHub via Mermaid. *Dados fictícios de demonstração.*
+
+```mermaid
+erDiagram
+    perfis ||--o{ fornecedores : "é dono de"
+    perfis ||--o{ cotacoes : "registra"
+    perfis ||--o{ sugestoes_produto : "cria"
+    categorias ||--o{ produtos : "classifica"
+    produtos ||--o{ cotacoes : "é cotado em"
+    produtos ||--o{ sugestoes_produto : "sugerido como"
+    fornecedores ||--o{ cotacoes : "fornece"
+
+    perfis {
+        uuid id PK "= auth.users.id (Supabase)"
+        text nome
+        text role "vendedor|comprador|admin"
+        boolean ativo
+        timestamptz created_at
+    }
+    fornecedores {
+        uuid id PK
+        text nome
+        uuid user_id FK
+        boolean ativo
+    }
+    categorias {
+        uuid id PK
+        text nome UK
+    }
+    produtos {
+        uuid id PK
+        text nome
+        text nome_normalizado
+        uuid categoria_id FK
+        numeric preco_venda
+        numeric custo_atual
+    }
+    cotacoes {
+        uuid id PK
+        uuid fornecedor_id FK
+        uuid produto_id FK
+        uuid user_id FK
+        date data_cotacao
+        numeric preco_embalagem
+        numeric preco_unitario "GENERATED"
+        text status "pendente|em_analise|aprovado|reprovado"
+    }
+    sugestoes_produto {
+        uuid id PK
+        text nome_digitado
+        uuid produto_sugerido_id FK
+        uuid created_by FK
+        boolean aprovado
+    }
+```
+
+**Complementos:** Row Level Security (RLS) por papel, *trigger* de criação de perfil e a view `analise_cotacoes`, que calcula margens e o melhor preço por produto com *window functions*.
